@@ -1,0 +1,31 @@
+#!fsharp
+
+open System.Linq
+open System
+
+let sampleInput = System.IO.File.ReadAllText("partOneInput.txt")
+
+let elves = sampleInput.Split("\r\n\r\n")
+
+
+//display(elves)
+
+#!fsharp
+
+let elfTotal (elf:string) =
+    let items = elf.Split("\r")
+    items |> Array.map (fun i -> i |> int) |> Array.sum
+
+let totals = elves |> Array.map (fun x -> elfTotal(x))
+
+let order = totals
+            |> Array.mapi (fun i v -> i+1, v)
+            |> Array.sortByDescending snd
+
+let maxElf = order.MaxBy(snd)
+
+display(maxElf)
+            
+let topThree =  order.Take(3).ToArray()
+
+topThree |> Array.sumBy snd
