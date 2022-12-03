@@ -1,0 +1,73 @@
+#!fsharp
+
+let sampleInput = """vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw""".Split("\r\n") |> Array.toList
+
+let transformInputIntoListOfRucksacs (input: string list) =
+    input |> List.map (fun s -> [(s.Substring(0,(s.Length /2))); (s.Substring(s.Length/2))])
+
+let sacks = transformInputIntoListOfRucksacs sampleInput
+
+let distinctItems (compartment: string) =
+    let foo  = List.distinct (compartment |> Seq.toList)
+    String(foo |> List.sort |>  List.toArray)
+
+
+sacks.Head.Head |> distinctItems
+
+let distinctSacks (sacks: (string list) list) = 
+    sacks |> List.map (fun r -> [(distinctItems (r.[0]));(distinctItems (r.[1]))])
+    
+
+sacks |> distinctSacks
+
+let inCommon (first: string) (second: string) = 
+    let input = first |> Seq.toList
+    let comp = second |> Seq.toList
+    
+    let isHit (c:char) (foo: char list) =
+        foo |> List.contains c
+
+    let foo (hits: char list) (c:char) =
+        if (isHit c comp) then            
+            c :: hits
+        else
+            hits
+
+    List.fold foo [] input
+    
+let x = sacks.[0].[0] 
+let y = sacks.[0].[1] 
+
+sacks 
+|> List.map (fun s -> inCommon s.[0] s.[1])
+|> List.map (fun s -> List.distinct s)
+
+let input = File.ReadAllText("input.txt").Split("\r\n") |> Array.toList
+
+let partoneInput = transformInputIntoListOfRucksacs input
+
+let commonLetters = partoneInput 
+                    |> List.map (fun s -> inCommon s.[0] s.[1])
+                    |> List.map (fun s -> List.distinct s)
+
+// 65 -> 90 = A-Z
+// 97 -> 122 = a - z
+ 
+let score c = 
+    let v = (int)c
+    if (v > 64 && v <91 ) then
+        int(v - 64 + 26)
+    else
+        int(v - (96))
+
+let convertToScores (c: char list) = 
+    c |> List.map (fun c -> score c)
+
+let scores = commonLetters |> List.map (fun l -> convertToScores l)
+
+scores |> List.concat |> List.sum
