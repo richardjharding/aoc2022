@@ -71,3 +71,72 @@ let convertToScores (c: char list) =
 let scores = commonLetters |> List.map (fun l -> convertToScores l)
 
 scores |> List.concat |> List.sum
+
+#!markdown
+
+part 2
+
+#!fsharp
+
+let splitIntoGroups (input: string list) = 
+    input |> List.chunkBySize 3
+
+let groups = splitIntoGroups sampleInput
+
+// let s = Map [('a', 0)]
+
+// let b = s.Add('A', 0)
+
+// s.ContainsKey('a')
+//s.['A']
+
+let s = groups[0].[0]
+
+let updateMap  (m:Map<char,int>) (c:char) = 
+    let f (v: int option) =
+        match v with
+        | Some x -> Some (x + 1)
+        | None -> Some 1
+    
+    m.Change(c,f)
+
+let updateMapFromString (s:string) = s |> Seq.toList |> List.distinct
+
+let mapOne = s |> Seq.toList |> List.distinct |> List.fold (updateMap) Map.empty
+
+let mapTwo = groups[0].[1] |> Seq.toList |> List.distinct |> List.fold (updateMap) mapOne
+
+let mapThree = groups[0].[2] |> Seq.toList |> List.distinct |> List.fold (updateMap) mapTwo
+
+mapThree |> Map.filter (fun k v -> v = 3)
+
+let keys = groups 
+            |> List.map (fun groupList -> 
+                            let foo = groupList |> List.map (fun s -> updateMapFromString s)
+                            let one = foo[0] |> List.fold (updateMap) Map.empty
+                            let two = foo[1] |> List.fold updateMap one
+                            foo[2] |> List.fold updateMap two |> Map.filter (fun k v -> v = 3) |> Map.keys
+                )
+                |> Seq.concat
+                |> Seq.toList
+
+
+let keyScores = convertToScores keys
+
+#!fsharp
+
+let groupsPart2 = splitIntoGroups input
+
+let keys2 = groupsPart2
+            |> List.map (fun groupList -> 
+                            let foo = groupList |> List.map (fun s -> updateMapFromString s)
+                            let one = foo[0] |> List.fold (updateMap) Map.empty
+                            let two = foo[1] |> List.fold updateMap one
+                            foo[2] |> List.fold updateMap two |> Map.filter (fun k v -> v = 3) |> Map.keys
+                )
+                |> Seq.concat
+                |> Seq.toList
+
+let keysPart2 = convertToScores keys2
+
+keysPart2 |> List.sum
