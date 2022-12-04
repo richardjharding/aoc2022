@@ -43,13 +43,26 @@ let pairHit (row: List<seq<int>>) =
     let dif2 = set2 |> Set.difference set1
     if(dif1.IsEmpty || dif2.IsEmpty) then true else false
 
+let pairIntersection (row: List<seq<int>>) = 
+    let set1 = row[0] |> Set.ofSeq
+    let set2 = row[1] |> Set.ofSeq
+    let intersect = set1 |> Set.intersect set2
+    if(intersect.Count > 0) then true else false
+    
 
 
-
-getGroups sampleInput |> List.filter (fun r -> pairHit r) |> List.length
+getGroups sampleInput |> List.filter (fun r -> pairIntersection r) |> List.length
 
 #!fsharp
 
 let input = File.ReadAllText("input.txt").Split("\r\n") |> Array.toList
 
 input |> getGroups2 |> List.filter (fun r -> pairHit r) |> List.length
+
+#!markdown
+
+part 2
+
+#!fsharp
+
+input |> getGroups2 |> List.filter (fun r -> pairIntersection r) |> List.length
