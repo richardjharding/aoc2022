@@ -1,0 +1,55 @@
+#!fsharp
+
+open System
+
+let sampleInput = """2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8"""
+
+let getGroups (inputString: string) = 
+    inputString.Split("\r\n") 
+    |> Array.toList 
+    |> List.map (fun s -> s.Split(",") |> Array.toList)
+    |> List.map (fun r ->         
+        let start = r |> Seq.head |> Seq.toList |> Seq.head |> string |> int
+        let endi =  r |> Seq.head |> Seq.toList |> Seq.rev |> Seq.head |> string |> int
+        let start2 = r |> Seq.rev |> Seq.head |> Seq.toList |> Seq.head |> string |> int
+        let endi2 =  r |> Seq.rev |>Seq.head |> Seq.toList |> Seq.rev |> Seq.head |> string |> int        
+        [seq {start .. endi}; seq {start2..endi2}]
+    )
+
+let getGroups2 (inputString: string list) =     
+    inputString 
+    |> List.map (fun s -> s.Split(",") |> Array.toList)
+    |> List.map (fun x ->
+        let part1 = (x |> List.head).Split("-") |> Array.toList  
+        //display(part1)
+        let part2 = (x |> List.rev |> List.head).Split("-") |> Array.toList       
+        let start = part1 |> Seq.head |> int
+        let endi =  part1 |> Seq.rev |> Seq.head  |> int
+        let start2 = part2 |> Seq.head |> int
+        let endi2 =  part2 |> Seq.rev |>Seq.head |> int        
+        [seq {start .. endi}; seq {start2..endi2}]
+    )
+
+let pairHit (row: List<seq<int>>) = 
+    let set1 = row[0] |> Set.ofSeq
+    let set2 = row[1] |> Set.ofSeq
+
+    let dif1 = set1 |> Set.difference set2
+    let dif2 = set2 |> Set.difference set1
+    if(dif1.IsEmpty || dif2.IsEmpty) then true else false
+
+
+
+
+getGroups sampleInput |> List.filter (fun r -> pairHit r) |> List.length
+
+#!fsharp
+
+let input = File.ReadAllText("input.txt").Split("\r\n") |> Array.toList
+
+input |> getGroups2 |> List.filter (fun r -> pairHit r) |> List.length
