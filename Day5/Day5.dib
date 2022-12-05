@@ -1,0 +1,139 @@
+#!fsharp
+
+open System.Collections.Generic
+
+let loadFile path = 
+    File.ReadAllText(path).Split("\r\n\r\n")
+
+let sampleData = loadFile("sampleInput.txt").[0].Split("\r\n") 
+
+let x = sampleData |> Array.map (fun r -> r |> Seq.chunkBySize 4) |> Array.map (fun r -> (r |> Seq.map (fun c -> String(c))) |> Seq.toList) |> Seq.toList
+
+let dataToPush = x |> List.rev |> List.skip 1
+
+let testCell = x[0][0]
+
+let parseCell (s:string) =
+    let chars = s |> Seq.toList
+    match chars with
+    | '[' :: v :: ']' :: _ -> Some v
+    | _ -> None
+
+
+parseCell testCell
+
+dataToPush
+
+let stack1 = new Stack<string>()
+let stack2 = new Stack<string>()
+let stack3 = new Stack<string>()
+
+let stacks = [stack1;stack2;stack3]
+
+dataToPush |> List.iteri (fun row r -> 
+                                r |> List.iteri (fun col s ->
+                                
+                                                    let x = parseCell s
+                                                    match x with
+                                                    | Some v -> stacks[col].Push(v.ToDisplayString())
+                                                    | _ -> ())
+                                )
+
+type move = {Qty:int; Source:int; Target:int}
+
+let parseMove (move:string) = 
+    let pattern = "move (\d+) from (\d+) to (\d+)"
+    let matched = RegularExpressions.Regex.Match(move, pattern)
+    let qty = int matched.Groups[1].Value
+    let src = int matched.Groups[2].Value
+    let tgt = int matched.Groups[3].Value
+    {Qty = qty; Source = src; Target = tgt}
+
+let sampleMovesData = loadFile("sampleInput.txt").[1].Split("\r\n") 
+
+let parseMoves movedata =
+    movedata |> Array.map (fun r -> parseMove r) |> Array.toList
+
+let samplemoves = parseMoves sampleMovesData
+
+let makeMoves (stacks:Stack<string> list) (moves: move list) = 
+    moves |> List.iter (fun m ->
+        let buffer = Stack<string>()
+        
+        for i in 0 .. (m.Qty - 1 ) do (
+            buffer.Push(stacks[m.Source - 1].Pop())
+            stacks[m.Target - 1].Push(buffer.Pop())
+        )        
+    )
+    stacks |> List.map (fun s -> s.Pop())
+
+//makeMoves stacks samplemoves
+
+#!fsharp
+
+// part 1
+
+let inputStackData = loadFile("input.txt").[0].Split("\r\n") 
+
+let stacksPt1 = [Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();]
+
+let stackInput = inputStackData |> Array.map (fun r -> r |> Seq.chunkBySize 4) |> Array.map (fun r -> (r |> Seq.map (fun c -> String(c))) |> Seq.toList) |> Seq.toList |> List.rev |> List.skip 1
+
+stackInput |> List.iteri (fun row r -> 
+                                r |> List.iteri (fun col s ->
+                                
+                                                    let x = parseCell s
+                                                    match x with
+                                                    | Some v -> stacksPt1[col].Push(v.ToDisplayString())
+                                                    | _ -> ())
+                                )
+
+
+let inputMovesdata = loadFile("input.txt").[1].Split("\r\n") 
+
+let inputMoves = parseMoves inputMovesdata
+
+// let  res = makeMoves stacksPt1 inputMoves 
+
+// res.ToDisplayString().Replace(", ","")
+
+#!markdown
+
+Part 2
+
+#!fsharp
+
+let makeMoves2 (stacksInp:Stack<string> list) (moves: move list) = 
+    moves |> List.iter (fun m ->
+        let buffer = Stack<string>()
+        let buffer2 = Stack<string>()
+        
+        for i in 0 .. (m.Qty - 1 ) do (
+            buffer.Push(stacksInp[m.Source - 1].Pop())
+            //stacks[m.Target - 1].Push(buffer.Pop())
+        ) 
+
+        for i in 0 .. (m.Qty - 1 ) do (
+            buffer2.Push(buffer.Pop())
+            stacksInp[m.Target - 1].Push(buffer2.Pop())
+        )       
+    )
+    stacksInp |> List.map (fun s -> s.Pop())
+
+//makeMoves2 stacks samplemoves
+
+
+let stacksPt2 = [Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();Stack<string>();]
+
+stackInput |> List.iteri (fun row r -> 
+                                r |> List.iteri (fun col s ->
+                                
+                                                    let x = parseCell s
+                                                    match x with
+                                                    | Some v -> stacksPt2[col].Push(v.ToDisplayString())
+                                                    | _ -> ())
+                                )
+
+let  res2 = makeMoves2 stacksPt2 inputMoves 
+
+res2.ToDisplayString().Replace(", ","")

@@ -112,7 +112,7 @@ mapThree |> Map.filter (fun k v -> v = 3)
 
 let keys = groups 
             |> List.map (fun groupList -> 
-                            let foo = groupList |> List.map (fun s -> updateMapFromString s)
+                            let foo = groupList |> List.map (fun s -> updateMapFromString s) //def a better way to do this with fold!
                             let one = foo[0] |> List.fold (updateMap) Map.empty
                             let two = foo[1] |> List.fold updateMap one
                             foo[2] |> List.fold updateMap two |> Map.filter (fun k v -> v = 3) |> Map.keys
