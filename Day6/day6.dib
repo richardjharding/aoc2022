@@ -1,0 +1,66 @@
+#!fsharp
+
+open System.Collections.Generic
+
+let sampleinput = "nppdvjthqldpwncqszvftbrmjlhg"
+
+let inputQ = Queue<char>()
+
+let processInput inputSeq = 
+    inputSeq |> Seq.takeWhile (fun c -> 
+                inputQ.Enqueue(c)
+                let hit = match inputQ.Count with
+                            | 5 -> 
+                                   inputQ.Dequeue() |> ignore
+                                   let contents = inputQ.ToArray()
+                                   //display(contents)
+                                   if((contents |> Array.distinct |> Array.length) = 4) then
+                                     
+                                     false 
+                                   else true
+                                   
+                            | _ -> 
+                                    
+                                    true
+                
+                hit
+                
+    )
+    
+
+//processInput sampleinput |> Seq.length
+
+#!fsharp
+
+let input = File.ReadAllText("input.txt")
+
+processInput input |> Seq.length
+
+#!fsharp
+
+let processInput2 inputSeq (queueInput: Queue<char>) = 
+    inputSeq |> Seq.takeWhile (fun c -> 
+                queueInput.Enqueue(c)
+                let hit = match queueInput.Count with
+                            | 15 -> 
+                                   queueInput.Dequeue() |> ignore
+                                   let contents = queueInput.ToArray()
+                                   //display(contents)
+                                   if((contents |> Array.distinct |> Array.length) = 14) then
+                                     
+                                     false 
+                                   else true
+                                   
+                            | _ -> 
+                                    
+                                    true
+                
+                hit
+                
+    )
+
+let sample2 = "nppdvjthqldpwncqszvftbrmjlhg"
+
+//processInput2 sample2 (Queue<char>()) |> Seq.length
+
+processInput2 input (Queue<char>()) |> Seq.length
