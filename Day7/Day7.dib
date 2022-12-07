@@ -1,0 +1,130 @@
+#!fsharp
+
+// stolen from https://fsharpforfunandprofit.com/posts/recursive-types-and-folds-3b/
+
+
+type FileSystemItem =
+    | File of FileInfo
+    | Directory of DirectoryInfo
+and FileInfo = {name:string; fileSize:int}
+and DirectoryInfo = {name:string; dirSize:int; subitems:FileSystemItem list}
+
+#!fsharp
+
+let (|Cd|Ls|Dir|File|) (input:string) = 
+    match input with
+    | s when s.StartsWith("$ cd") -> Cd
+    | s when s.StartsWith("dir") -> Dir
+    | s when s.StartsWith("$ ls") -> Ls
+    | _ -> File
+
+let sampleInput = System.IO.File.ReadAllText("sampleInput.txt").Split("\r\n") |> Array.toList
+
+let parseFile (line:string) = 
+    //display("Parsing File: " + line)
+    let parts = line.Split(" ")
+    {name = parts[1]; fileSize = (int parts[0])}
+
+let parseDir (line:string) = 
+    let parts = line.Split(" ")
+    {name = parts[2]; dirSize = 0; subitems = []}
+
+let stack = System.Collections.Generic.Stack<DirectoryInfo>()
+
+
+
+let takeWhileNotCD (listing: string list) = 
+    listing |> List.takeWhile (fun l -> 
+                                match l with
+                                | Cd -> false
+                                | _ -> true
+    )
+
+let filterFiles (listing: string list) = 
+    listing |> List.filter (fun l -> match l with
+                                        | File -> true
+                                        | _ -> false)
+
+let filesTotal (listing: string list) = 
+    listing |> List.map (fun l -> parseFile l) |> List.sumBy(fun f -> f.fileSize)
+
+
+let rec updateParents (fs:Map<string,int>) (sizeInc:int) (path:string) =     
+
+    match path with
+    | "/" ->         
+        let cv = fs[path]
+        let nv = cv + sizeInc
+        let newFs = fs.Change(path, (fun i -> Some nv))
+        newFs    
+    | _ -> //eg /abc        
+        let parents = path.Substring(0, path.LastIndexOf("/"))
+        if(parents.Length = 0) then
+            let cv = fs["/"]
+            let nv = cv + sizeInc
+            let newFs = fs.Change("/", (fun i -> Some nv))
+            newFs
+        else
+            
+            let currentValue = fs[parents]
+            
+            let newValue = currentValue + sizeInc
+            let newFs = fs.Change(parents, (fun i -> Some newValue))
+            updateParents newFs sizeInc parents
+        
+
+let rec processlist (fs: Map<string,int>) (curDir:string) (listing: string list) = 
+    match listing with
+    | head :: tail -> 
+                    //display(head)
+                    match head with
+                    | Cd -> 
+                            let dirName = parseDir head
+                            if (dirName.name = "..") then
+                                processlist fs (curDir.Substring(0,curDir.LastIndexOf("/"))) tail
+                            else
+                                let calcPath p curd = 
+                                    if(p = "/") then
+                                        p
+                                    else 
+                                        if(curd = "/") then ("/" + p) else (curd + "/" + p)
+
+                                let path = calcPath dirName.name curDir                                
+                                let size = tail |> takeWhileNotCD |> filterFiles |> filesTotal                                
+                                let newFs = updateParents  (fs.Add(path, size)) size path                                
+                                processlist newFs path  tail
+                            
+                    | _ -> processlist fs curDir tail
+    | [] -> fs
+
+
+
+
+let root = Map.empty
+
+let dirs = processlist root "" (sampleInput)
+
+dirs |> Map.filter (fun k v -> if (v < 100001 ) then true else false) |> Map.toList |> List.sumBy (fun x -> snd x)
+
+#!fsharp
+
+let input = System.IO.File.ReadAllText("input.txt").Split("\r\n") |> Array.toList
+
+let pt1 = Map.empty
+
+let ptDirs = processlist pt1 "" (input )
+
+ptDirs |> Map.filter (fun k v -> if(v < 100001) then true else false) |> Map.toList |> List.sumBy (fun x -> snd x)
+
+#!fsharp
+
+//pt 3
+
+let totalUsed = ptDirs["/"]
+
+let space = 70000000 - totalUsed
+
+let minReq = 30000000 - space
+minReq
+
+ptDirs |> Map.filter(fun k v -> if(v > minReq) then true else false) |> Map.toList |> List.sortBy (fun x -> snd x)
